@@ -221,7 +221,8 @@ def generate():
     
     # Convert to hex string
     hex_output = str(([int(b) for b in packet_bytes]))
-    
+    if data.get('toggle'):
+        hex_output = str(([int(b) for b in packet_bytes[10:-2]]))
     return jsonify({
         'hex': hex_output,
         'bytes': list(packet_bytes)

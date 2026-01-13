@@ -18,6 +18,17 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="form-group">
+            <label>Display Data Only?</label>
+            <div class="toggle-container">
+                <span>Full Packet</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="hex-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>Only Data</span>
+            </div>
+        </div>
         
         <!-- Dynamic Fields Container -->
         <div id="fields-container"></div>
@@ -35,7 +46,7 @@
     <script>
         // APID definitions from Flask
         const apidDefs = {{ apids | tojson }};
-        
+        const hexToggle = document.getElementById('hex-toggle');
         const apidSelect = document.getElementById('apid-select');
         const fieldsContainer = document.getElementById('fields-container');
         const submitBtn = document.getElementById('submit-btn');
@@ -92,7 +103,7 @@
             const response = await fetch('/generate', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({apid: apid, fields: fields})
+                body: JSON.stringify({apid: apid, fields: fields, toggle:hexToggle.checked})
             });
             
             const data = await response.json();
