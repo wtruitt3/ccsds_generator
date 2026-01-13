@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CCSDS Packet Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>CLICK-B/C CCSDS Packet Generator for COSMOS Commanding</h1>
+        
+        <!-- APID Selection -->
+        <div class="form-group">
+            <label>Select APID:</label>
+            <select id="apid-select">
+                <option value="">-- Select APID --</option>
+                {% for apid, info in apids.items() %}
+                <option value="{{ apid }}">{{ apid }} - {{ info.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Dynamic Fields Container -->
+        <div id="fields-container"></div>
+        
+        <!-- Submit Button -->
+        <button id="submit-btn" style="display:none;">Generate Packet</button>
+        
+        <!-- Output -->
+        <div id="output" style="display:none;">
+            <h3>Packet Bytes:</h3>
+            <pre id="packet-output"></pre>
+        </div>
+    </div>
+
+    <script>
+        // APID definitions from Flask
+        const apidDefs = {{ apids | tojson }};
+        
+        const apidSelect = document.getElementById('apid-select');
+        const fieldsContainer = document.getElementById('fields-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const output = document.getElementById('output');
+        const packetOutput = document.getElementById('packet-output');
+        
+        // When APID is selected, show fields
+        apidSelect.addEventListener('change', function() {
+            const apid = this.value;
+            fieldsContainer.innerHTML = '';
+            output.style.display = 'none';
+            
+            if (!apid) {
+                submitBtn.style.display = 'none';
+                return;
+            }
+            
+            const apidInfo = apidDefs[apid];
+            
+            // Create input field for each parameter
+            apidInfo.fields.forEach(field => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.textContent = field.name + ':';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = field.name;
+                input.placeholder = field.type;
+                input.required = true;
+                
+                div.appendChild(label);
+                div.appendChild(input);
+                fieldsContainer.appendChild(div);
+            });
+            
+            submitBtn.style.display = 'block';
+        });
+        
+        // Generate packet on submit
+        submitBtn.addEventListener('click', async function() {
+            const apid = apidSelect.value;
+            const apidInfo = apidDefs[apid];
+            
+            // Collect field values
+            const fields = {};
+            apidInfo.fields.forEach(field => {
+                fields[field.name] = document.getElementById(field.name).value;
+            });
+            
+            // Send to backend
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({apid: apid, fields: fields})
+            });
+            
+            const data = await response.json();
+            
+            // Show output
+            packetOutput.textContent = data.hex;
+            output.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
