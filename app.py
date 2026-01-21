@@ -44,7 +44,9 @@ def get_apid_definitions():
         },
         '0x67': {
             'name': 'Execute File',
-            'fields': []
+            'fields': [{'name': 'Save to File'},
+                       {'name': 'File Number'},
+                       {'name': 'Executed File Name'}]
         },
         '0xFE': {
             'name': 'List Files',
@@ -280,6 +282,13 @@ def create_packet(apid, fields):
         else: 
             num_chunks = int(fields['Number of Chunks to Transfer (if flag != 0xFF)'])
         data = struct.pack('>HBHH', id, flag, idx, num_chunks)
+    elif apid_def['name'] == 'Execute File':
+        outflag = struct.pack('B', int(fields['Save to File'], 16))
+        number = int(fields['File Number'])
+        name = fields['Executed File Name'].encode('utf-8')
+        name_len = len(name)
+        data = outflag + struct.pack('>BH%ds' % (name_len), number, name_len, name)
+
 
     #data field completed
     apid_int = int(apid, 16)
